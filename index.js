@@ -1,11 +1,11 @@
 
 //Destructuring. Elements taken from Matter JS. Matter = Matter JS Library.
-const {Engine, Render, Runner, World, Bodies, MouseConstraint, Mouse} = Matter;
+const {Engine, Render, Runner, World, Bodies} = Matter;
 
 //Define width and height. Use later to randomly position shapes.
 
+const width = 600;
 const height = 600;
-const width = 800;
 
 // Create new Engine
 const engine = Engine.create();
@@ -29,62 +29,47 @@ const render = Render.create({
 Render.run(render);
 Runner.run(Runner.create(), engine);
 
-// Enable click and drag mouse effects
-World.add(world, MouseConstraint.create(engine, {
-  mouse: Mouse.create(render.canvas)
-}))
 
-//Walls - stops shapes moving off screen
+//Walls - stops shapes moving off screen. Will adapt to whatever height and width is defined up top.
 const walls = [
-  Bodies.rectangle(width/2, 0, width, 40, {isStatic: true, render: {fillStyle: "#434e52"}}),
-  Bodies.rectangle(width/2, height, width, 40, {isStatic: true, render: {fillStyle: "#434e52"}}),
-  Bodies.rectangle(0, height/2, 40, height, {isStatic: true, render: {fillStyle: "#434e52"}}),
-  Bodies.rectangle(width, height/2, 40, height, {isStatic: true, render: {fillStyle: "#434e52"}})
+  Bodies.rectangle(width/2, 0, width, 40, {isStatic: true}),
+  Bodies.rectangle(width/2, height, width, 40, {isStatic: true}),
+  Bodies.rectangle(0, height/2, 40, height, {isStatic: true}),
+  Bodies.rectangle(width, height/2, 40, height, {isStatic: true})
 ]
 
 //Can pass in array of shapes to world.
 World.add(world, walls)
 
-//Random shapes with random positions and customised colours.
+//Maze Generation
+// 2D array that represents our grid and starts off with all false values inside of it.
 
-for (let i = 0; i < 30; i++) {
-  if (Math.random() <= 0.33) {
-    World.add(world, Bodies.rectangle(Math.random() * width, Math.random() * height, 50, 50, {
-      render: {
-        fillStyle: "#df8543"
-      }
-    }))
-  } else if (Math.random() <= 0.66) {
-    World.add(world, Bodies.circle(Math.random() * width, Math.random() * height, 30, {
-      render: {
-        fillStyle: "#5b8c85"
-      }
-    }))
-  } else {
-    World.add(world, Bodies.polygon(Math.random() * width, Math.random() * height, 5, 40, {
-      render: {
-        fillStyle: "#ecce6d"
-      }
-    }))
-  }
-}
+// const grid = [];
 
+//Nested array. First produces correct number of rows, and then nested array populates each row.
 
+// for (let i = 0; i < 3; i++) {
+//   grid.push([]);
+//   for (let j = 0; j < 3; j++) {
+//     grid[i].push(false);
+//   } 
+// }
 
+//Better alternative to for loop. Create a new array with 3 empty spaces. Fill them with null values. Map over each and replace with an erray with three false values;
 
+//NB We can just fill initially with an array as if we do this each array will be equal in memory. Therefore, if we edit one array, the others will be edited exactly the same way.
+let rows = 3;
+let cols = 3;
 
+const grid = Array(rows).fill(null).map(() => Array(cols).fill(false));
 
+//Vertical and horizontal arrays keep track off our inner walls. 
+//If grid is 3x3, vertical 2D array has 3 rows and 2 columns.
+//If grid is 3x3, horizontal 2D array has 2 rows and 3 columns.
 
+const verticals = Array(rows).fill(null).map(() => Array(cols - 1).fill(false))
+const horizontals = Array(rows-1).fill(null).map(() => Array(cols).fill(false))
 
-
-
-
-
-//Create a shape (x pos of center, y pos of center, width, height)
-// const shape = Bodies.rectangle(200, 200, 50, 50, {
-  //isStatis:true ensures that the shape does not move. If we remove this, the shape will immediately fall on refresh.
-  // isStatic: true
-// });
-//Add to the world object. If we search for world in the console at any time and look under bodies, we can see all the shapes and properties contained.
-// World.add(world, shape)
-
+console.log(grid)
+console.log(verticals)
+console.log(horizontals)
