@@ -2,10 +2,15 @@
 //Destructuring. Elements taken from Matter JS. Matter = Matter JS Library.
 const {Engine, Render, Runner, World, Bodies} = Matter;
 
-//Define width and height. Use later to randomly position shapes.
+//Define rows, columns, width, height cellWidth and cellHeight. Use later to draw maze.
 
+const rows = 10;
+const cols = 10;
 const width = 600;
 const height = 600;
+const cellWidth = width/cols;
+const cellHeight = height/rows;
+
 
 // Create new Engine
 const engine = Engine.create();
@@ -29,37 +34,31 @@ const render = Render.create({
 Render.run(render);
 Runner.run(Runner.create(), engine);
 
+// ********* MAZE GENERATION *********
 
-//Walls - stops shapes moving off screen. Will adapt to whatever height and width is defined up top.
-const walls = [
-  Bodies.rectangle(width/2, 0, width, 40, {isStatic: true}),
-  Bodies.rectangle(width/2, height, width, 40, {isStatic: true}),
-  Bodies.rectangle(0, height/2, 40, height, {isStatic: true}),
-  Bodies.rectangle(width, height/2, 40, height, {isStatic: true})
-]
+//Function to randomly shuffle values in an array.
 
-//Can pass in array of shapes to world.
-World.add(world, walls)
+const shuffle = (arr) => {
+  let counter = arr.length;
 
-//Maze Generation
+  while (counter > 0) {
+    const index = Math.floor(Math.random() * counter)
+    
+    counter--;
+
+    const temp = arr[counter];
+    arr[counter] = arr[index];
+    arr[index] = temp;
+  }
+
+  return arr;
+}
+
 // 2D array that represents our grid and starts off with all false values inside of it.
-
-// const grid = [];
-
-//Nested array. First produces correct number of rows, and then nested array populates each row.
-
-// for (let i = 0; i < 3; i++) {
-//   grid.push([]);
-//   for (let j = 0; j < 3; j++) {
-//     grid[i].push(false);
-//   } 
-// }
 
 //Better alternative to for loop. Create a new array with 3 empty spaces. Fill them with null values. Map over each and replace with an erray with three false values;
 
 //NB We can just fill initially with an array as if we do this each array will be equal in memory. Therefore, if we edit one array, the others will be edited exactly the same way.
-let rows = 3;
-let cols = 3;
 
 const grid = Array(rows).fill(null).map(() => Array(cols).fill(false));
 
@@ -70,6 +69,109 @@ const grid = Array(rows).fill(null).map(() => Array(cols).fill(false));
 const verticals = Array(rows).fill(null).map(() => Array(cols - 1).fill(false))
 const horizontals = Array(rows-1).fill(null).map(() => Array(cols).fill(false))
 
-console.log(grid)
-console.log(verticals)
-console.log(horizontals)
+//Randomly generate row and col index to choose starting position.
+
+const startRow = Math.floor(Math.random() * rows)
+const startCol = Math.floor(Math.random() * cols)
+
+//Define function for building our maze.
+
+const buildMaze = (row, column) => {
+  // If I have visited the cell at row[col], return;
+
+  if (grid[row][column] === true) {
+    return;
+  }
+
+  // Mark this cell as having been visited (true)
+
+  grid[row][column] = true;
+
+  // Assemble randomly ordered list of neighbour cells.
+
+  const neighbours = shuffle([
+    [row - 1, column, 'up'], //above
+    [row + 1, column, 'down'], //below
+    [row, column + 1, 'right'], //right
+    [row, column - 1, 'left'] //left
+  ]);
+
+  //For each neighbour... 
+
+  for (let neighbour of neighbours) {
+
+    const [nextRow, nextColumn, direction] = neighbour;
+
+  // (1) Check to see if neighbour cell is out of bounds
+
+    if (nextRow < 0 || nextRow >= rows || nextColumn < 0 || nextColumn >= cols) {
+      //Don't leave, but don't do anything else...
+      continue;
+    }
+
+  // (2) If we have visited neighbour, continue to next option.
+
+    if (grid[nextRow][nextColumn] === true) {
+      continue;
+    } 
+
+  // (3) Remove wall from either horizontal/vertical array.
+
+    if (direction === 'right') {
+      verticals[row][column] = true;
+    } else if (direction === 'left') {
+      verticals[row][column - 1] = true;
+    } else if (direction === 'up') {
+      horizontals[row - 1][column] = true;
+    } else if (direction === 'down') {
+      horizontals[row][column] = true;
+    }
+
+    // (4) Visit next cell (recall function)
+    buildMaze(nextRow, nextColumn)
+
+  }
+
+}
+
+buildMaze(startRow, startCol)
+
+//Iterate over horizontals and build rectangles where values are false.
+
+horizontals.forEach((row, rowIndex) => {
+  row.forEach((open, columnIndex) => {
+    if (open === true) {
+      return;
+    }
+
+    const wall = Bodies.rectangle(
+      columnIndex * cellWidth + cellWidth / 2,  //position on x
+      rowIndex * cellHeight + cellHeight,       //position on y
+      cellWidth,                                //width
+      10,                                       //height
+      {isStatic: true}
+    );
+
+    World.add(world, wall);
+
+  });
+});
+
+verticals.forEach((row, rowIndex) => {
+  row.forEach((open, columnIndex) => {
+    if (open) {
+      return;
+    }
+
+    const wall = Bodies.rectangle(
+      columnIndex * cellWidth + cellWidth,      //position on x
+      rowIndex * cellHeight + cellHeight / 2,   //position on y
+      10,                                       //width
+      cellHeight,                               //height
+      {isStatic: true}
+    );
+    
+    World.add(world, wall);
+
+  });
+});
