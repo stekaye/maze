@@ -1,6 +1,6 @@
 
 //Destructuring. Elements taken from Matter JS. Matter = Matter JS Library.
-const {Engine, Render, Runner, World, Bodies} = Matter;
+const {Engine, Render, Runner, World, Bodies, Body} = Matter;
 
 //Define rows, columns, width, height cellWidth and cellHeight. Use later to draw maze.
 
@@ -14,6 +14,8 @@ const cellHeight = height/rows;
 
 // Create new Engine
 const engine = Engine.create();
+//Remove gravity;
+engine.world.gravity.y = 0;
 //Access World that got created along with the engine.
 const { world } = engine;
 //create render object, which will show content on screen.
@@ -29,6 +31,18 @@ const render = Render.create({
     wireframes: false
   }
 });
+
+//********* MAZE GENERATION ********* 
+//stops shapes moving off screen
+
+const walls = [
+  Bodies.rectangle(width/2, 0, width, width * 0.01, {isStatic: true, render: {fillStyle: "#ecce6d"}}),
+  Bodies.rectangle(width/2, height, width, width * 0.01, {isStatic: true, render: {fillStyle: "#ecce6d"}}),
+  Bodies.rectangle(0, height/2, width * 0.01, height, {isStatic: true, render: {fillStyle: "#ecce6d"}}),
+  Bodies.rectangle(width, height/2, width * 0.01, height, {isStatic: true, render: {fillStyle: "#ecce6d"}})
+]
+
+World.add(world, walls)
 
 //Tell render object to start.
 Render.run(render);
@@ -175,3 +189,55 @@ verticals.forEach((row, rowIndex) => {
 
   });
 });
+
+//********* GOAL ********* 
+
+const goal = Bodies.rectangle(
+  width - (cellWidth/2) + 2.5,        //position on x
+  height - (cellHeight/2) + 2.5,      //position on y
+  cellWidth * 0.65,                   //width
+  cellHeight * 0.65,                  //height
+  {
+    isStatic: true,
+    render: {fillStyle: "#ecce6d"}}
+);
+
+World.add(world, goal);
+
+//********* BALL ********* 
+
+const ball = Bodies.circle(
+  cellWidth / 2,                  //position on x
+  cellHeight / 2,                 //position on y
+  cellWidth * 0.3,                //radius
+  {
+    isStatic: false,
+    render: {fillStyle: "#ecce6d"}}
+);
+
+World.add(world, ball);
+
+//********* KEYPRESS ********* 
+
+document.addEventListener('keydown', event => {
+
+  const {x, y} = ball.velocity;
+  
+  if (event.code === 'KeyW' || event.code === 'ArrowUp') {
+    //Negative velocity moves ball up. X remains the same.
+    Body.setVelocity(ball, {x, y : y - 5})
+  }
+
+  if (event.code === 'KeyS' || event.code === 'ArrowDown') {
+    Body.setVelocity(ball, {x, y : y + 5})
+  }
+
+  if (event.code === 'KeyA' || event.code === 'ArrowLeft') {
+    Body.setVelocity(ball, {x: x - 5, y})
+  }
+
+  if (event.code === 'KeyD' || event.code === 'ArrowRight') {
+    Body.setVelocity(ball, {x: x + 5, y})
+  }
+
+})
