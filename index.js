@@ -7,11 +7,11 @@ const {Engine, Render, Runner, World, Bodies, Body, Events} = Matter;
 //Define rows, columns, width, height cellWidth and cellHeight. Use later to draw maze.
 
 const cellsHorizontal = 5;
-const cellsVertical = 4;
+const cellsVertical = 5;
 const width = window.innerWidth; 
 const height = window.innerHeight;
-const unitLengthX = width/cellsHorizontal;
-const unitLengthY = height/cellsVertical;
+const unitLengthX = width / cellsHorizontal;
+const unitLengthY = height / cellsVertical;
 
 // Create new Engine
 const engine = Engine.create();
@@ -41,19 +41,18 @@ Runner.run(Runner.create(), engine);
 //stops shapes moving off screen
 
 const walls = [
-  Bodies.rectangle(width/2, 0, width, 10, {isStatic: true, render: {fillStyle: "#ecce6d"}}),
-  Bodies.rectangle(width/2, height, width, 10, {isStatic: true, render: {fillStyle: "#ecce6d"}}),
-  Bodies.rectangle(0, height/2, 10, height, {isStatic: true, render: {fillStyle: "#ecce6d"}}),
-  Bodies.rectangle(width, height/2, 10, height, {isStatic: true, render: {fillStyle: "#ecce6d"}})
-]
-
-World.add(world, walls)
+  Bodies.rectangle(width / 2, 0, width, 2, { isStatic: true }),
+  Bodies.rectangle(width / 2, height, width, 2, { isStatic: true }),
+  Bodies.rectangle(0, height / 2, 2, height, { isStatic: true }),
+  Bodies.rectangle(width, height / 2, 2, height, { isStatic: true })
+];
+World.add(world, walls);
 
 // ********* MAZE GENERATION *********
 
 //Function to randomly shuffle values in an array.
 
-const shuffle = (arr) => {
+const shuffle = arr => {
   let counter = arr.length;
 
   while (counter > 0) {
@@ -67,7 +66,7 @@ const shuffle = (arr) => {
   }
 
   return arr;
-}
+};
 
 // 2D array that represents our grid and starts off with all false values inside of it.
 
@@ -155,7 +154,7 @@ buildMaze(startRow, startCol)
 
 horizontals.forEach((row, rowIndex) => {
   row.forEach((open, columnIndex) => {
-    if (open === true) {
+    if (open) {
       return;
     }
 
@@ -164,15 +163,15 @@ horizontals.forEach((row, rowIndex) => {
       rowIndex * unitLengthY + unitLengthY,       //position on y
       unitLengthX,                                //width
       5,                                       //height
-      {isStatic: true,
+      {
         label: 'wall',
+        isStatic: true,
         render: {
           fillStyle: '#ecce6d'
-        }}
+        }
+      }
     );
-
     World.add(world, wall);
-
   });
 });
 
@@ -187,29 +186,31 @@ verticals.forEach((row, rowIndex) => {
       rowIndex * unitLengthY + unitLengthY / 2,   //position on y
       5,                                       //width
       unitLengthY,                               //height
-      {isStatic: true,
+      {
         label: 'wall',
+        isStatic: true,
         render: {
           fillStyle: '#ecce6d'
-        }}
+        }
+      }
     );
-    
     World.add(world, wall);
-
   });
 });
 
 //********* GOAL ********* 
 
 const goal = Bodies.rectangle(
-  width - (unitLengthX/2) + 2.5,        //position on x
-  height - (unitLengthY/2) + 2.5,      //position on y
+  width - unitLengthX/2,        //position on x
+  height - unitLengthY/2,      //position on y
   unitLengthX * 0.65,                   //width
   unitLengthY * 0.65,                  //height
   {
+    label: 'goal',
     isStatic: true,
-    render: {fillStyle: "#ecce6d"},
-    label: 'goal'
+    render: {
+      fillStyle: "#ecce6d"
+    }
   }
 );
 
@@ -223,11 +224,12 @@ const ball = Bodies.circle(
   unitLengthY / 2,                  //position on y
   ballRadius,                       //radius
   {
-    isStatic: false,
-    render: {fillStyle: "#ecce6d"},
-    label: 'ball'
+    // isStatic: false,
+    label: 'ball',
+    render: {
+      fillStyle: "#ecce6d"
+    },
   },
-    
 );
 
 World.add(world, ball);
@@ -260,20 +262,17 @@ document.addEventListener('keydown', event => {
 //********* WIN CONDITION ********* 
 
 Events.on(engine, 'collisionStart', event => {
-  
-  event.pairs.forEach((collision) => {
+  event.pairs.forEach(collision => {
     const labels = ['ball', 'goal'];
 
     if (
       labels.includes(collision.bodyA.label) && 
-      labels.includes(collision.bodyB.label)) {
-      //Display message
+      labels.includes(collision.bodyB.label)
+      ) {
       document.querySelector('.winner').classList.remove('hidden');
-      //Turn gravity back on.
       world.gravity.y = 1;
-      //Turn isStatic to off for all 'wall' labels in world.bodies...
-      world.bodies.forEach((body) => {
-        if (body.label = 'wall') {
+      world.bodies.forEach(body => {
+        if (body.label === 'wall') {
           Body.setStatic(body, false);
         }
       });
