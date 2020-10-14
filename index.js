@@ -270,6 +270,7 @@ Events.on(engine, 'collisionStart', event => {
       labels.includes(collision.bodyB.label)
       ) {
       document.querySelector('.winner').classList.remove('hidden');
+      document.querySelector('button').classList.remove('hidden');
       world.gravity.y = 1;
       world.bodies.forEach(body => {
         if (body.label === 'wall') {
@@ -281,3 +282,11 @@ Events.on(engine, 'collisionStart', event => {
   });
 
 });
+
+let button = document.querySelector('.replay')
+
+button.addEventListener('click', replay)
+
+function replay() {
+  location.reload();
+}
