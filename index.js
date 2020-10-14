@@ -1,6 +1,8 @@
 
 //Destructuring. Elements taken from Matter JS. Matter = Matter JS Library.
-const {Engine, Render, Runner, World, Bodies, Body} = Matter;
+//Body allows us to move the object.
+//Events allows us to detect events (such as collisions).
+const {Engine, Render, Runner, World, Bodies, Body, Events} = Matter;
 
 //Define rows, columns, width, height cellWidth and cellHeight. Use later to draw maze.
 
@@ -163,7 +165,8 @@ horizontals.forEach((row, rowIndex) => {
       rowIndex * cellHeight + cellHeight,       //position on y
       cellWidth,                                //width
       10,                                       //height
-      {isStatic: true}
+      {isStatic: true,
+        label: 'wall'}
     );
 
     World.add(world, wall);
@@ -182,7 +185,8 @@ verticals.forEach((row, rowIndex) => {
       rowIndex * cellHeight + cellHeight / 2,   //position on y
       10,                                       //width
       cellHeight,                               //height
-      {isStatic: true}
+      {isStatic: true,
+        label: 'wall'}
     );
     
     World.add(world, wall);
@@ -199,7 +203,9 @@ const goal = Bodies.rectangle(
   cellHeight * 0.65,                  //height
   {
     isStatic: true,
-    render: {fillStyle: "#ecce6d"}}
+    render: {fillStyle: "#ecce6d"},
+    label: 'goal'
+  }
 );
 
 World.add(world, goal);
@@ -212,7 +218,10 @@ const ball = Bodies.circle(
   cellWidth * 0.3,                //radius
   {
     isStatic: false,
-    render: {fillStyle: "#ecce6d"}}
+    render: {fillStyle: "#ecce6d"},
+    label: 'ball'
+  },
+    
 );
 
 World.add(world, ball);
@@ -241,3 +250,25 @@ document.addEventListener('keydown', event => {
   }
 
 })
+
+//********* WIN CONDITION ********* 
+
+Events.on(engine, 'collisionStart', event => {
+  
+  event.pairs.forEach((collision) => {
+    const labels = ['ball', 'goal'];
+
+    if (labels.includes(collision.bodyA.label) && labels.includes(collision.bodyB.label)) {
+      //Turn gravity back on.
+      world.gravity.y = 1;
+      //Turn isStatic to off for all 'wall' labels in world.bodies...
+      world.bodies.forEach((body) => {
+        if (body.label = 'wall') {
+          Body.setStatic(body, false);
+        }
+      })
+    }
+
+  })
+
+});
