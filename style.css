@@ -1,0 +1,23 @@
+body {
+  margin: 0;
+}
+
+.hidden {
+  display: none !important;
+}
+
+h1 {
+  color: #fff;
+  font-size: 50px;
+  font-family: Verdana, Geneva, Tahoma, sans-serif;
+}
+
+.winner {
+  align-items: center;
+  display: flex;
+  height: 100vh;
+  justify-content: center;
+  position: absolute;
+  width: 100vw;
+  z-index: 1;
+}

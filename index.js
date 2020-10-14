@@ -6,13 +6,12 @@ const {Engine, Render, Runner, World, Bodies, Body, Events} = Matter;
 
 //Define rows, columns, width, height cellWidth and cellHeight. Use later to draw maze.
 
-const rows = 10;
-const cols = 10;
-const width = 600;
-const height = 600;
-const cellWidth = width/cols;
-const cellHeight = height/rows;
-
+const cellsHorizontal = 5;
+const cellsVertical = 4;
+const width = window.innerWidth; 
+const height = window.innerHeight;
+const unitLengthX = width/cellsHorizontal;
+const unitLengthY = height/cellsVertical;
 
 // Create new Engine
 const engine = Engine.create();
@@ -34,21 +33,21 @@ const render = Render.create({
   }
 });
 
-//********* MAZE GENERATION ********* 
-//stops shapes moving off screen
-
-const walls = [
-  Bodies.rectangle(width/2, 0, width, width * 0.01, {isStatic: true, render: {fillStyle: "#ecce6d"}}),
-  Bodies.rectangle(width/2, height, width, width * 0.01, {isStatic: true, render: {fillStyle: "#ecce6d"}}),
-  Bodies.rectangle(0, height/2, width * 0.01, height, {isStatic: true, render: {fillStyle: "#ecce6d"}}),
-  Bodies.rectangle(width, height/2, width * 0.01, height, {isStatic: true, render: {fillStyle: "#ecce6d"}})
-]
-
-World.add(world, walls)
-
 //Tell render object to start.
 Render.run(render);
 Runner.run(Runner.create(), engine);
+
+//********* WALLS ********* 
+//stops shapes moving off screen
+
+const walls = [
+  Bodies.rectangle(width/2, 0, width, 10, {isStatic: true, render: {fillStyle: "#ecce6d"}}),
+  Bodies.rectangle(width/2, height, width, 10, {isStatic: true, render: {fillStyle: "#ecce6d"}}),
+  Bodies.rectangle(0, height/2, 10, height, {isStatic: true, render: {fillStyle: "#ecce6d"}}),
+  Bodies.rectangle(width, height/2, 10, height, {isStatic: true, render: {fillStyle: "#ecce6d"}})
+]
+
+World.add(world, walls)
 
 // ********* MAZE GENERATION *********
 
@@ -76,19 +75,19 @@ const shuffle = (arr) => {
 
 //NB We can just fill initially with an array as if we do this each array will be equal in memory. Therefore, if we edit one array, the others will be edited exactly the same way.
 
-const grid = Array(rows).fill(null).map(() => Array(cols).fill(false));
+const grid = Array(cellsVertical).fill(null).map(() => Array(cellsHorizontal).fill(false));
 
 //Vertical and horizontal arrays keep track off our inner walls. 
 //If grid is 3x3, vertical 2D array has 3 rows and 2 columns.
 //If grid is 3x3, horizontal 2D array has 2 rows and 3 columns.
 
-const verticals = Array(rows).fill(null).map(() => Array(cols - 1).fill(false))
-const horizontals = Array(rows-1).fill(null).map(() => Array(cols).fill(false))
+const verticals = Array(cellsVertical).fill(null).map(() => Array(cellsHorizontal - 1).fill(false))
+const horizontals = Array(cellsVertical-1).fill(null).map(() => Array(cellsHorizontal).fill(false))
 
 //Randomly generate row and col index to choose starting position.
 
-const startRow = Math.floor(Math.random() * rows)
-const startCol = Math.floor(Math.random() * cols)
+const startRow = Math.floor(Math.random() * cellsVertical)
+const startCol = Math.floor(Math.random() * cellsHorizontal)
 
 //Define function for building our maze.
 
@@ -120,7 +119,7 @@ const buildMaze = (row, column) => {
 
   // (1) Check to see if neighbour cell is out of bounds
 
-    if (nextRow < 0 || nextRow >= rows || nextColumn < 0 || nextColumn >= cols) {
+    if (nextRow < 0 || nextRow >= cellsVertical || nextColumn < 0 || nextColumn >= cellsHorizontal) {
       //Don't leave, but don't do anything else...
       continue;
     }
@@ -161,12 +160,15 @@ horizontals.forEach((row, rowIndex) => {
     }
 
     const wall = Bodies.rectangle(
-      columnIndex * cellWidth + cellWidth / 2,  //position on x
-      rowIndex * cellHeight + cellHeight,       //position on y
-      cellWidth,                                //width
-      10,                                       //height
+      columnIndex * unitLengthX + unitLengthX / 2,  //position on x
+      rowIndex * unitLengthY + unitLengthY,       //position on y
+      unitLengthX,                                //width
+      5,                                       //height
       {isStatic: true,
-        label: 'wall'}
+        label: 'wall',
+        render: {
+          fillStyle: '#ecce6d'
+        }}
     );
 
     World.add(world, wall);
@@ -181,12 +183,15 @@ verticals.forEach((row, rowIndex) => {
     }
 
     const wall = Bodies.rectangle(
-      columnIndex * cellWidth + cellWidth,      //position on x
-      rowIndex * cellHeight + cellHeight / 2,   //position on y
-      10,                                       //width
-      cellHeight,                               //height
+      columnIndex * unitLengthX + unitLengthX,      //position on x
+      rowIndex * unitLengthY + unitLengthY / 2,   //position on y
+      5,                                       //width
+      unitLengthY,                               //height
       {isStatic: true,
-        label: 'wall'}
+        label: 'wall',
+        render: {
+          fillStyle: '#ecce6d'
+        }}
     );
     
     World.add(world, wall);
@@ -197,10 +202,10 @@ verticals.forEach((row, rowIndex) => {
 //********* GOAL ********* 
 
 const goal = Bodies.rectangle(
-  width - (cellWidth/2) + 2.5,        //position on x
-  height - (cellHeight/2) + 2.5,      //position on y
-  cellWidth * 0.65,                   //width
-  cellHeight * 0.65,                  //height
+  width - (unitLengthX/2) + 2.5,        //position on x
+  height - (unitLengthY/2) + 2.5,      //position on y
+  unitLengthX * 0.65,                   //width
+  unitLengthY * 0.65,                  //height
   {
     isStatic: true,
     render: {fillStyle: "#ecce6d"},
@@ -212,10 +217,11 @@ World.add(world, goal);
 
 //********* BALL ********* 
 
+const ballRadius = Math.min(unitLengthX, unitLengthY) / 4
 const ball = Bodies.circle(
-  cellWidth / 2,                  //position on x
-  cellHeight / 2,                 //position on y
-  cellWidth * 0.3,                //radius
+  unitLengthX / 2,                  //position on x
+  unitLengthY / 2,                  //position on y
+  ballRadius,                       //radius
   {
     isStatic: false,
     render: {fillStyle: "#ecce6d"},
@@ -258,7 +264,11 @@ Events.on(engine, 'collisionStart', event => {
   event.pairs.forEach((collision) => {
     const labels = ['ball', 'goal'];
 
-    if (labels.includes(collision.bodyA.label) && labels.includes(collision.bodyB.label)) {
+    if (
+      labels.includes(collision.bodyA.label) && 
+      labels.includes(collision.bodyB.label)) {
+      //Display message
+      document.querySelector('.winner').classList.remove('hidden');
       //Turn gravity back on.
       world.gravity.y = 1;
       //Turn isStatic to off for all 'wall' labels in world.bodies...
@@ -266,9 +276,9 @@ Events.on(engine, 'collisionStart', event => {
         if (body.label = 'wall') {
           Body.setStatic(body, false);
         }
-      })
+      });
     }
 
-  })
+  });
 
 });
